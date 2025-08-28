@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>애니 추천!! </title>
+    <!-- Tailwind CSS CDN을 사용하여 스타일링 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter 폰트 사용 -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #D5B8E6; /* 바깥쪽 배경을 연한 보라색으로 변경 */
+            /* Flexbox를 사용하여 전체 콘텐츠를 화면 중앙에 배치 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+        .container {
+            max-width: 600px;
+            width: 90%;
+            background-color: #ffffff; /* 컨테이너 배경을 흰색으로 변경 */
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            min-height: 80vh;
+            /* 컨테이너 내부 요소들을 정렬 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .screen {
+            display: none;
+            text-align: center;
+            width: 100%;
+        }
+        .screen.active {
+            display: block;
+        }
+        .option-button {
+            width: 100%;
+            background-color: #e5e7eb;
+            color: #4b5563;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .option-button:hover {
+            background-color: #d1d5db;
+            transform: scale(1.02);
+        }
+        .option-button:active {
+            transform: translateY(2px);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .option-button.selected {
+            background-color: #8b5cf6;
+            color: white;
+            font-weight: bold;
+        }
+        .result-image {
+            margin-top: 1rem;
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        #options-container {
+            /* Flexbox를 사용하여 답변 버튼 간격 조절 */
+            display: flex;
+            flex-direction: column;
+            gap: 1rem; /* 이 값을 조절하여 간격을 변경할 수 있습니다. */
+            width: 100%;
+            margin-top: 1.5rem; /* 질문과 답변 사이의 간격 */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 시작 화면 -->
+    <div id="start-screen" class="screen active">
+        <h1 class="text-4xl font-extrabold text-purple-900 animate-pulse">애니 추천!!</h1>
+        <p class="text-lg text-gray-800 mt-8">당신의 취향에 맞는 애니메이션을 찾아보세요!!<br><br>과연~ 당신에게 가장 잘 맞는 애니는?</p>
+        <button id="startButton" class="mt-12 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
+            시작
+        </button>
+    </div>
+
+    <!-- 질문 화면 (10개 질문을 동적으로 생성) -->
+    <div id="quiz-screen" class="screen">
+        <h2 id="question-text" class="text-2xl font-semibold text-gray-900"></h2>
+        <div id="options-container">
+            <!-- 답변 버튼이 여기에 동적으로 추가됩니다 -->
+        </div>
+    </div>
+
+    <!-- 결과 화면 -->
+    <div id="result-screen" class="screen">
+        <h2 class="text-3xl font-extrabold text-purple-900">당신에게 딱 맞는 애니!</h2>
+        <p id="result-text" class="text-lg text-gray-800"></p>
+        <img id="result-image" class="result-image mx-auto" src="" alt="추천 애니메이션 이미지">
+        <button id="restartButton" class="mt-8 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
+            다시하기
+        </button>
+    </div>
+</div>
+
+<script>
+    // 질문과 답변 데이터를 직접 수정하여 사용할 수 있습니다.
+    const quizData = [
+        {
+            question: "Q1.당신이 가장 끌리는 세계관은 어떤가요?",
+            options: [
+                { text: "반복되는 시간 속에서 운명을 개척해나가는 이세계", score: 10 },
+                { text: "고대와 현대가 교차하는, 영웅들의 전쟁터 마술과 신념의 세계", score: 20 },
+                { text: "현실보다 잔혹한 어린이들의 어두운 현실", score: 30 },
+                { text: "조용한 밤의 거리, 도시의 고독한 흡혈귀", score: 40 },
+                { text: "악령과 저주가 도사리는 심령현상 중심의 공포 세계", score: 50 }
+            ]
+        },
+        {
+            question: "Q2.주인공의 성향 중, 당신이 가장 공감 가는 유형은?",
+            options: [
+                { text: "절망 속에서도 다시 일어서는 의지의 화신", score: 10 },
+                { text: "정의와 신념 사이에서 갈등하는 이상주의자", score: 20 },
+                { text: "순수하지만 현실을 몰라 상처를 주는 외계인/비현실적 존재", score: 30 },
+                { text: "감정을 숨기며 밤의 자유를 갈망하는 반항적 청소년", score: 40 },
+                { text: "어두운 과거를 가진, 영적인 것에 민감한 미스터리 추적자", score: 50 }
+            ]
+        },
+        {
+            question: "Q3.어떤 분위기의 애니를 선호하나요?",
+            options: [
+                { text: "희망과 절망이 반복되는 감정 롤러코스터", score: 10 },
+                { text: "전투와 철학이 뒤섞인 진지한 분위기", score: 20 },
+                { text: "귀여운 그림체와 대비되는 잔혹한 이야기", score: 30 },
+                { text: "느리고 잔잔한 몽환적 청춘 드라마", score: 40 },
+                { text: "음산하고 긴장감 넘치는 공포 미스터리물", score: 50 }
+            ]
+        },
+        {
+            question: "Q4.당신이 가장 중요하게 생각하는 테마는?",
+            options: [
+                { text: "실패 속에서 다시 일어나는 도전과 성장", score: 10 },
+                { text: "옳은 길을 선택하는 것에 대한 고민 ", score: 20 },
+                { text: "순수함과 현실의 괴리에서 오는 비극", score: 30 },
+                { text: "일상의 답답함에서 벗어나는 자유", score: 40 },
+                { text: "죽음, 영혼, 저주 같은 오컬트적 주제", score: 50 }
+            ]
+        },
+        {
+            question: "Q5.이런 장면을 상상해보세요. 당신은...",
+            options: [
+                { text: "죽음을 반복하며 사랑하는 사람을 지키기 위해 몸부림친다.", score: 10 },
+                { text: "수많은 가능성 중에서 자신의 정의를 선택하고 싸운다.", score: 20 },
+                { text: "누군가를 도와주려 했지만, 결국 그 사람을 더 괴롭게 만든다.", score: 30 },
+                { text: "친구도 가족도 없는 밤거리에서, 누군가와 연결되기를 바란다.", score: 40 },
+                { text: "영적인 힘을 이용해 혼령과 싸우며 과거의 죄를 마주한다.", score: 50 }
+            ]
+        },
+        {
+            question: "Q6.이 다섯 가지 중 당신이 가장 선호하는 장르/요소는?",
+            options: [
+                { text: "이세걔 생존+심리 드라마", score: 10 },
+                { text: "전투 + 철학적 대사 + 멋진 액션", score: 20 },
+                { text: "잔혹 동화 + 사회적 문제 비판", score: 30 },
+                { text: "청춘 + 도시판타지+느긋한 분위기", score: 40 },
+                { text: "오콜트 + 심령 공포 + 어두운 캐릭터성 ", score: 50 }
+            ]
+        },
+        {
+            question: "Q7.가장 좋아하는 테마는?",
+            options: [
+                { text: "계속 실패하고 절망하지만 결국엔 성장해가는 이야기", score: 10 },
+                { text: "선택과 결과가 중심이 되는, 철학적인 갈등 구조", score: 20 },
+                { text: "귀여운 캐릭터가 겪는 충격적인 전개, 반전 가득", score: 30 },
+                { text: "특별한 사건 없이도 인물의 감정 변화가 중심이 되는 전개", score: 40 },
+                { text: "괴현상, 영혼, 저주를 풀어나가는 퍼즐형 이야기", score: 50 }
+            ]
+        },
+        {
+            question: "Q8.당신이 가장 공감하는 주제는?",
+            options: [
+                { text: "사랑하는 사람을 위해 모든 고통을 감수하는 헌신", score: 10 },
+                { text: "정의란 무엇인가? 라는 본질적인 질문", score: 20 },
+                { text: "세상이 아이들을 어떻게 상처 입히는지에 대한 비판", score: 30 },
+                { text: "현대 사회에서 느끼는 고립감과 소속감의 결말", score: 40 },
+                { text: "죽음 이후에도 끝나지 않는 감정이나 원한", score: 50 }
+            ]
+        },
+        {
+            question: "Q9.선호하는 캐릭터와 주인공 사이의 관계는?",
+            options: [
+                { text: "깊은 우대감 속에서 서로를 구원하는 관계 ", score: 10 },
+                { text: "동료지만 철학적 충동을 겪는 라이벌/파트너 관계", score: 20 },
+                { text: "일방적이지만 순수한 헌신을 보여주는 관계", score: 30 },
+                { text: "낯선 이와의 우연한 만남이 인생을 바꾸는 관계악", score: 40 },
+                { text: "저주나 과거의 인연으로 엮인 운명적인 관계", score: 50 }
+            ]
+        },
+        {
+            question: "Q10. 이 중 당신이 가장 두려워하는 것은?",
+            options: [
+                { text: "같은 고통을 무한히 반복한는 것", score: 10 },
+                { text: "자신의 신념이 무너지고 선택을 후회하는 것", score: 20 },
+                { text: "아무리 노력해도 누군가를 행복하게 해줄 수 없는 것", score: 30 },
+                { text: "외로움과 소외감 속에서 점점 무뎌지는 당신", score: 40 },
+                { text: "설명할 수 없는 불가사의한 현상에 휘말리고 고통받는 것", score: 50 }
+            ]
+        }
+    ];
+
+    // 점수 범위에 따른 추천 애니메이션 데이터
+    const results = [
+        {
+            minScore: 100, maxScore: 199,
+            text: "끊임없는 실패 속에서도 다시 일어서는 도전과 성장을 좋아하는 당신에게는? 《Re:제로부터 시작하는 이세계 생활》을 추천합니다.",
+            image: "https://i.namu.wiki/i/jZK8_2YVmqQH5XoG6YtO3cdLzy_Tg1X_qPNiAsyFCrfgYtT5qk869pgcpkQUzkx3DHk4gt4HS9yT7sJUuHuqmp-_dvfSAp8hsd6VoWQ-a2F5LQ-OmHAEMD3QwSl9GOzR43XErFqYrMoTTOVrtn3yJEekluUkY8WZrwvcRnF5_u4.webp"
+        },
+        {
+            minScore: 200, maxScore: 299,
+            text: "정의와 신념, 선택의 무게에 끌리는 당신에게는???《Fate/stay night [Unlimited Blade Works]》를 추천합니다!!!",
+            image: "https://i.namu.wiki/i/jZK8_2YVmqQH5XoG6YtO3dMzRG9yvXXnRPFKTXzwrnbNY5ED6qo9gDgXvGDbnS90tuT6ZwtlfO3ptkqv3PxD_TwrfF8X3V7pL0lOzh_olwI8-2mV4bqpHwVqdeBiQ2PtWM4YKlZLHaI55F_nmw3KxFycwivXiLcY6Oc56rd5Fhc.webp"
+        },
+        {
+            minScore: 300, maxScore: 399,
+            text: "순수함과 현실의 괴리에서 오는 비극에 공감하는 당신에게는 《타코피의 원죄》를 추천합니다.",
+            image: "https://i.namu.wiki/i/jZK8_2YVmqQH5XoG6YtO3XHsUg5FbdCJPSwXN8pIqcdG3W0aPNS4KJb3nJYXPNqKukUEYSfZAIOFDugNo9FBspiJ9yjyOk2gNteljro00EKGkQoPgxfcdPFq0UTmHGdMyirZ4AsMg0vcN_263ne4iB1hl24NCjUO-00fxDfvc_8.webp"
+        },
+        {
+            minScore: 400, maxScore: 499,
+            text: "외로움 속에서 자유와 연결을 갈망하는 당신에게는 《철야의 노래》를 추천합니다.",
+            image: "https://i.namu.wiki/i/jZK8_2YVmqQH5XoG6YtO3bFRwei_C81EWJxwPO0sn9eaqNioLw7DvCh794o7PFbPAi1XVxkSB6Mus7JdQnXglMF0jHmNXPPsBQt8mLfjJpKvcYR9MUJkVuiGT-F1trMlStVj2cL7ejpoF-vtr6ZFUhhipyfD6V6iY3t8pDHGonA.webp"
+        },
+        {
+            minScore: 500, maxScore: 599,
+            text: "죽음, 영혼, 저주 같은 오컬트적 테마에 매혹되는 당신에게는 《다크개더링》을 추천합니다.",
+            image: "https://i.namu.wiki/i/jZK8_2YVmqQH5XoG6YtO3bNZTkyVWwZpzOC_t8kN6EPXy5Trbs1tf5a3psSQ3QxwahgxyI9ffHzwsVRLVJZ9DSF7no--JyukALY6PBAKE8iH9PMPMx72o2NW_lEZgkaAsKZ4eUkiFn61Z504GWk85UsllY2qfH6L7-F5ZsDHNwM.webp"
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let totalScore = 0;
+
+    const startScreen = document.getElementById('start-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const startButton = document.getElementById('startButton');
+    const restartButton = document.getElementById('restartButton');
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const resultText = document.getElementById('result-text');
+    const resultImage = document.getElementById('result-image');
+
+    // 화면 전환 함수
+    function showScreen(screenId) {
+        const screens = document.querySelectorAll('.screen');
+        screens.forEach(screen => screen.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    // 질문 로드 함수
+    function loadQuestion() {
+        if (currentQuestionIndex < quizData.length) {
+            const questionData = quizData[currentQuestionIndex];
+            questionText.textContent = questionData.question;
+            optionsContainer.innerHTML = '';
+            questionData.options.forEach(option => {
+                const button = document.createElement('button');
+                button.classList.add('option-button', 'block');
+                button.textContent = option.text;
+                button.dataset.score = option.score;
+                button.addEventListener('click', (event) => {
+                    handleAnswerClick(event.currentTarget, option.score);
+                });
+                optionsContainer.appendChild(button);
+            });
+        } else {
+            showResult();
+        }
+    }
+
+    // 답변 클릭 처리 함수
+    function handleAnswerClick(selectedButton, score) {
+        // 이전에 선택된 버튼의 선택 클래스 제거
+        const allButtons = document.querySelectorAll('.option-button');
+        allButtons.forEach(button => button.classList.remove('selected'));
+        
+        // 클릭된 버튼에 선택 클래스 추가
+        selectedButton.classList.add('selected');
+
+        totalScore += score;
+        currentQuestionIndex++;
+        
+        setTimeout(() => {
+            loadQuestion();
+        }, 500);
+    }
+
+    // 결과 보여주기 함수
+    function showResult() {
+        const recommendedAnime = results.find(result => totalScore >= result.minScore && totalScore <= result.maxScore);
+        
+        if (recommendedAnime) {
+            resultText.innerHTML = recommendedAnime.text;
+            if (recommendedAnime.image) {
+                resultImage.src = recommendedAnime.image;
+                resultImage.style.display = 'block';
+            } else {
+                resultImage.src = '';
+                resultImage.style.display = 'none';
+            }
+        } else {
+            resultText.innerHTML = "추천 애니메이션을 찾을 수 없습니다.";
+            resultImage.src = '';
+            resultImage.style.display = 'none';
+        }
+        showScreen('result-screen');
+    }
+
+    // 초기화 함수
+    function resetQuiz() {
+        currentQuestionIndex = 0;
+        totalScore = 0;
+        showScreen('start-screen');
+    }
+
+    // 이벤트 리스너
+    startButton.addEventListener('click', () => {
+        showScreen('quiz-screen');
+        loadQuestion();
+    });
+
+    restartButton.addEventListener('click', () => {
+        resetQuiz();
+    });
+
+</script>
+
+</body>
+</html>
